@@ -59,7 +59,12 @@ public class MainActivity extends ActionBarActivity {
         upload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               Upload2();
+                try {
+                    CreateFile createFile = new CreateFile("meow.txt", "Keep calm and meow on", MainActivity.this);
+                    File f = createFile.getFile();
+                    UploadFileOneDrive(f.getName(), new FileInputStream(f));
+                }
+                catch (Exception e){ e.printStackTrace();}
             }
         });
 
@@ -91,64 +96,42 @@ public class MainActivity extends ActionBarActivity {
         createFile();
     }
 
-   /* private void Upload(){
-        auth.login(MainActivity.this, Arrays.asList(new String[]{"wl.skydrive_update"}), new LiveAuthListener() {
-            @Override
-            public void onAuthComplete(LiveStatus liveStatus, LiveConnectSession liveConnectSession, Object o) {
-                if (liveStatus == LiveStatus.CONNECTED) {
-                     }
+    
+    /*Upload file with name and inputstream
+    * */
+    public void UploadFileOneDrive(final String file_name,final InputStream is){
+        auth.login(this, Arrays.asList(new String[]{"wl.skydrive_update"}), new LiveAuthListener() {
+            public void onAuthError(LiveAuthException exception, Object userState) {
+                exception.printStackTrace();
             }
 
-            @Override
-            public void onAuthError(LiveAuthException e, Object o) {
-                e.printStackTrace();
+            public void onAuthComplete(LiveStatus status, LiveConnectSession session, Object userState) {
+                client.uploadAsync("me/skydrive/", file_name, is, new LiveUploadOperationListener() {
+                    public void onUploadFailed(LiveOperationException exception, LiveOperation operation) {
+                        exception.printStackTrace();
+                    }
+
+                    @Override
+                    public void onUploadProgress(int i, int i1, LiveOperation liveOperation) {
+
+                    }
+
+                    public void onUploadCompleted(LiveOperation operation) {
+
+                        Log.i(ONEDRIVE_LOG_TAG,"onUploadComplete");
+                        try {
+                            is.close();
+                        }
+                        catch(IOException ioe) {
+
+                        }
+                    }
+
+                });
             }
         });
 
-    }*/
-
-//    private class UploadOneDrive extends AsyncTask<Void,Void,Void>{
-//
-//
-//
-//        @Override
-//        protected Void doInBackground(Void... params) {
-//
-//            CreateFile createFile = new CreateFile("mewo.txt","keep calm and meow on",MainActivity.this);
-//            File file = createFile.getFile();
-//
-//
-//            try {
-//                InputStream is = new FileInputStream(file);
-//               client.uploadAsync("TestOneDrive", file.getName(), is, new LiveUploadOperationListener() {
-//                   @Override
-//                   public void onUploadCompleted(LiveOperation liveOperation) {
-//                       Log.i(ONEDRIVE_LOG_TAG,"onUploadComplete");
-//                   }
-//
-//                   @Override
-//                   public void onUploadFailed(LiveOperationException e, LiveOperation liveOperation) {
-//                        e.printStackTrace();
-//                   }
-//
-//                   @Override
-//                   public void onUploadProgress(int i, int i1, LiveOperation liveOperation) {
-//
-//                   }
-//               });
-//            }
-//
-//            catch (Exception e){e.printStackTrace();}
-//
-//            return null;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Void aVoid) {
-//            super.onPostExecute(aVoid);
-//            Log.i(ONEDRIVE_LOG_TAG,"upload done");
-//        }
-//    }
+    }
 
     public void createFile() {
         final Runnable uploadImage = new Runnable() {
