@@ -33,17 +33,18 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 
 public class MainActivity extends ActionBarActivity {
-/*To access certain OneDrive folders, you can use friendly names instead of folder IDs. Use the following friendly names to access these corresponding folders in the OneDriveUI:
-USER_ID /skydrive/camera_roll represents the OneDrive camera roll folder.
-USER_ID /skydrive/my_documents represents the Documents folder.
-USER_ID /skydrive/my_photos represents the Pictures folder.
-USER_ID /skydrive/public_documents represents the Public folder.
-*/
+    /*To access certain OneDrive folders, you can use friendly names instead of folder IDs. Use the following friendly names to access these corresponding folders in the OneDriveUI:
+    USER_ID /skydrive/camera_roll represents the OneDrive camera roll folder.
+    USER_ID /skydrive/my_documents represents the Documents folder.
+    USER_ID /skydrive/my_photos represents the Pictures folder.
+    USER_ID /skydrive/public_documents represents the Public folder.
+    */
     private LiveAuthClient auth;
     private LiveConnectClient client;
 
@@ -53,8 +54,9 @@ USER_ID /skydrive/public_documents represents the Public folder.
     Button upload;
     Button meow;
     Button createFolder;
+    Button noAsync;
 
-    String ONEDRIVE_LOG_TAG= "Live SDK";
+    String ONEDRIVE_LOG_TAG = "Live SDK";
 
     ArrayList<OneDriveItem> rootList;
 
@@ -68,6 +70,13 @@ USER_ID /skydrive/public_documents represents the Public folder.
         createFolder = (Button) findViewById(R.id.CreateFOlder);
         resultTextView = (TextView) findViewById(R.id.result);
         meow = (Button) findViewById(R.id.meow);
+        noAsync = (Button) findViewById(R.id.meow_and_meow);
+        noAsync.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               new  getRootFiles().execute();
+            }
+        });
         meow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,25 +104,26 @@ USER_ID /skydrive/public_documents represents the Public folder.
                     CreateFile createFile = new CreateFile("meow.txt", "Keep calm and meow on", MainActivity.this);
                     File f = createFile.getFile();
                     UploadFileOneDrive(f.getName(), new FileInputStream(f));
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                catch (Exception e){ e.printStackTrace();}
             }
         });
+
 
     }
 
 
-
-
-    private void SignIn(){
-        auth = new LiveAuthClient(MainActivity.this,MyConstants.Live_ID);
-        Iterable<String> scopes = Arrays.asList("wl.signin", "wl.basic","wl.skydrive");
+    private void SignIn() {
+        auth = new LiveAuthClient(MainActivity.this, MyConstants.Live_ID);
+        Iterable<String> scopes = Arrays.asList("wl.signin", "wl.basic", "wl.skydrive");
         auth.login(MainActivity.this, scopes, new LiveAuthListener() {
             @Override
             public void onAuthComplete(LiveStatus liveStatus, LiveConnectSession liveConnectSession, Object o) {
                 if (liveStatus == LiveStatus.CONNECTED) {
                     Log.i(ONEDRIVE_LOG_TAG, "complete");
                     client = new LiveConnectClient(liveConnectSession);
+                    resultTextView.setText("loged");
                 }
             }
 
@@ -124,14 +134,14 @@ USER_ID /skydrive/public_documents represents the Public folder.
         });
     }
 
-    private void Upload2(){
+    private void Upload2() {
         createFile();
     }
 
 
     /*Upload file with name and inputstream
     * */
-    public void UploadFileOneDrive(final String file_name,final InputStream is){
+    public void UploadFileOneDrive(final String file_name, final InputStream is) {
         auth.login(this, Arrays.asList(new String[]{"wl.skydrive_update"}), new LiveAuthListener() {
             public void onAuthError(LiveAuthException exception, Object userState) {
                 exception.printStackTrace();
@@ -188,23 +198,19 @@ USER_ID /skydrive/public_documents represents the Public folder.
 
                         public void onUploadCompleted(LiveOperation operation) {
 
-                            Log.i(ONEDRIVE_LOG_TAG,"onUploadComplete");
+                            Log.i(ONEDRIVE_LOG_TAG, "onUploadComplete");
                             try {
                                 is.close();
-                            }
-                            catch(IOException ioe) {
+                            } catch (IOException ioe) {
 
                             }
                         }
 
                     });
-                }
-                catch(IOException ioex) {
+                } catch (IOException ioex) {
                     ioex.printStackTrace();
                     return;
-                }
-                catch(Exception ex)
-                {
+                } catch (Exception ex) {
                     ex.printStackTrace();
                     return;
                 }
@@ -241,6 +247,7 @@ USER_ID /skydrive/public_documents represents the Public folder.
             public void onError(LiveOperationException exception, LiveOperation operation) {
                 resultTextView.setText("Error creating folder: " + exception.getMessage());
             }
+
             public void onComplete(LiveOperation operation) {
                 JSONObject result = operation.getResult();
                 String text = "Folder created:\n" +
@@ -269,8 +276,9 @@ USER_ID /skydrive/public_documents represents the Public folder.
         );
     }
 
-    private void GetAllItem(){
+    private void GetAllItem() {
 
+        //It has it own Async
         client.getAsync("me/skydrive/files", new LiveOperationListener() {
             @Override
             public void onError(LiveOperationException e, LiveOperation liveOperation) {
@@ -287,32 +295,64 @@ USER_ID /skydrive/public_documents represents the Public folder.
 
                     return;
                 }
-            String json_body =    result.toString();
+                String json_body = result.toString();
                 rootList = new ArrayList<OneDriveItem>();
                 try {
                     JSONObject jsonSource = new JSONObject(json_body);
                     JSONArray listItem = jsonSource.getJSONArray("data");
-                    for (int i=0;i<listItem.length();i++)
-                    {
+                    for (int i = 0; i < listItem.length(); i++) {
                         JSONObject fileObject = listItem.getJSONObject(i);
                         String Name = fileObject.getString("name");
                         String id = fileObject.getString("id");
-                        String type= fileObject.getString("type");
-                        OneDriveItem oneDriveItem = new OneDriveItem(Name,id,type);
+                        String type = fileObject.getString("type");
+                        OneDriveItem oneDriveItem = new OneDriveItem(Name, id, type);
                         rootList.add(oneDriveItem);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                catch (Exception e){e.printStackTrace();}
-                for (int i=0;i<rootList.size();i++){
-                    Log.i("root",rootList.get(i).getType()+" "+rootList.get(i).getName()+" "+rootList.get(i).getId());
+                for (int i = 0; i < rootList.size(); i++) {
+                    Log.i("root", rootList.get(i).getType() + " " + rootList.get(i).getName() + " " + rootList.get(i).getId());
                 }
 
             }
         });
-
-
     }
 
-    
+    private ArrayList<OneDriveItem> getWithouAsync() {
+        ArrayList<OneDriveItem> items = new ArrayList<OneDriveItem>();
+
+        try {
+            LiveOperation liveOperation = client.get("me/skydrive/files");
+            JSONObject jsonSource = liveOperation.getResult();
+            JSONArray listItem = jsonSource.getJSONArray("data");
+            for (int i = 0; i < listItem.length(); i++) {
+                JSONObject fileObject = listItem.getJSONObject(i);
+                String Name = fileObject.getString("name");
+                String id = fileObject.getString("id");
+                String type = fileObject.getString("type");
+                OneDriveItem oneDriveItem = new OneDriveItem(Name, id, type);
+                items.add(oneDriveItem);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return items;
+    }
+
+    private class getRootFiles extends AsyncTask<Void,Void,ArrayList<OneDriveItem>>{
+        @Override
+        protected ArrayList<OneDriveItem> doInBackground(Void... params) {
+            return getWithouAsync();
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<OneDriveItem> oneDriveItems) {
+            super.onPostExecute(oneDriveItems);
+            for (int i = 0; i < oneDriveItems.size(); i++) {
+                Log.i("root", oneDriveItems.get(i).getType() + " " + oneDriveItems.get(i).getName() + " " + oneDriveItems.get(i).getId());
+            }
+        }
+    }
 
 }
