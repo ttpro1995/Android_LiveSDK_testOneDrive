@@ -21,6 +21,7 @@ import com.microsoft.live.LiveOperationListener;
 import com.microsoft.live.LiveStatus;
 import com.microsoft.live.LiveUploadOperationListener;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,6 +33,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -53,6 +55,8 @@ USER_ID /skydrive/public_documents represents the Public folder.
     Button createFolder;
 
     String ONEDRIVE_LOG_TAG= "Live SDK";
+
+    ArrayList<OneDriveItem> rootList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -284,15 +288,29 @@ USER_ID /skydrive/public_documents represents the Public folder.
                     return;
                 }
             String json_body =    result.toString();
-            Log.i("JSON",json_body);
-            CreateFile createFile = new CreateFile("root_files.json",json_body,MainActivity.this);
-                File file = createFile.getFile();
+                rootList = new ArrayList<OneDriveItem>();
                 try {
-                    UploadFileOneDrive(file.getName(),new FileInputStream(file));
+                    JSONObject jsonSource = new JSONObject(json_body);
+                    JSONArray listItem = jsonSource.getJSONArray("data");
+                    for (int i=0;i<listItem.length();i++)
+                    {
+                        JSONObject fileObject = listItem.getJSONObject(i);
+                        String Name = fileObject.getString("name");
+                        String id = fileObject.getString("id");
+                        String type= fileObject.getString("type");
+                        OneDriveItem oneDriveItem = new OneDriveItem(Name,id,type);
+                        rootList.add(oneDriveItem);
+                    }
                 }
-                catch (Exception e){e.printStackTrace();};
+                catch (Exception e){e.printStackTrace();}
+                for (int i=0;i<rootList.size();i++){
+                    Log.i("root",rootList.get(i).getType()+" "+rootList.get(i).getName()+" "+rootList.get(i).getId());
+                }
+
             }
         });
+
+
     }
 
     
