@@ -1,5 +1,9 @@
 package com.meow.thaithien.testonedrive;
 
+import android.util.Log;
+
+import java.util.ArrayList;
+
 /**
  * Created by Thien on 7/3/2015.
  */
@@ -27,5 +31,24 @@ public class OneDriveItem {
 
     public String getType() {
         return type;
+    }
+
+    public static OneDriveItem FindFolder(String name,ArrayList<OneDriveItem> inputArray)
+    {
+        OneDriveItem result = null;
+        for (int i=0;i<inputArray.size();i++)
+        {
+
+            String tmp_name = inputArray.get(i).getName();
+            String tmp_type=inputArray.get(i).getType();
+            if (tmp_type.equals("folder")||tmp_type.equals("album"))
+            if (tmp_name.equals(name))
+            {
+                result = inputArray.get(i);
+                return result;
+            }
+
+        }
+        return result;
     }
 }

@@ -55,6 +55,7 @@ public class MainActivity extends ActionBarActivity {
     Button meow;
     Button createFolder;
     Button noAsync;
+    Button exploreMeowFolder;
 
     String ONEDRIVE_LOG_TAG = "Live SDK";
 
@@ -71,10 +72,17 @@ public class MainActivity extends ActionBarActivity {
         resultTextView = (TextView) findViewById(R.id.result);
         meow = (Button) findViewById(R.id.meow);
         noAsync = (Button) findViewById(R.id.meow_and_meow);
+        exploreMeowFolder = (Button) findViewById(R.id.exploreMeowFolder);
+        exploreMeowFolder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new ExploreMeowFolder().execute();
+            }
+        });
         noAsync.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               new  getRootFiles().execute();
+               new  getRootFilesAsynTask().execute();
             }
         });
         meow.setOnClickListener(new View.OnClickListener() {
@@ -319,7 +327,7 @@ public class MainActivity extends ActionBarActivity {
         });
     }
 
-    private ArrayList<OneDriveItem> getWithouAsync() {
+    private ArrayList<OneDriveItem> getRootFiles() {
         ArrayList<OneDriveItem> items = new ArrayList<OneDriveItem>();
 
         try {
@@ -340,10 +348,31 @@ public class MainActivity extends ActionBarActivity {
         return items;
     }
 
-    private class getRootFiles extends AsyncTask<Void,Void,ArrayList<OneDriveItem>>{
+    private ArrayList<OneDriveItem> getFolderFiles(String Folder_id) {
+        ArrayList<OneDriveItem> items = new ArrayList<OneDriveItem>();
+
+        try {
+            LiveOperation liveOperation = client.get(Folder_id+"/files");
+            JSONObject jsonSource = liveOperation.getResult();
+            JSONArray listItem = jsonSource.getJSONArray("data");
+            for (int i = 0; i < listItem.length(); i++) {
+                JSONObject fileObject = listItem.getJSONObject(i);
+                String Name = fileObject.getString("name");
+                String id = fileObject.getString("id");
+                String type = fileObject.getString("type");
+                OneDriveItem oneDriveItem = new OneDriveItem(Name, id, type);
+                items.add(oneDriveItem);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return items;
+    }
+
+    private class getRootFilesAsynTask extends AsyncTask<Void,Void,ArrayList<OneDriveItem>>{
         @Override
         protected ArrayList<OneDriveItem> doInBackground(Void... params) {
-            return getWithouAsync();
+            return getRootFiles();
         }
 
         @Override
@@ -353,6 +382,28 @@ public class MainActivity extends ActionBarActivity {
                 Log.i("root", oneDriveItems.get(i).getType() + " " + oneDriveItems.get(i).getName() + " " + oneDriveItems.get(i).getId());
             }
         }
+    }
+
+
+    //Show files inside a folder name MeowFolder
+    private class ExploreMeowFolder extends AsyncTask<Void,Void,ArrayList<OneDriveItem>>{
+        @Override
+        protected ArrayList<OneDriveItem> doInBackground(Void... params) {
+           ArrayList<OneDriveItem> root = getRootFiles();
+            OneDriveItem mewo = OneDriveItem.FindFolder("MeowFolder", root);
+            String meow_id = mewo.getId();
+            ArrayList<OneDriveItem> result = getFolderFiles(meow_id);
+
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<OneDriveItem> oneDriveItems) {
+            super.onPostExecute(oneDriveItems);
+            for (int i = 0; i < oneDriveItems.size(); i++) {
+                Log.i("root", oneDriveItems.get(i).getType() + " " + oneDriveItems.get(i).getName() + " " + oneDriveItems.get(i).getId());
+            }
+            }
     }
 
 }

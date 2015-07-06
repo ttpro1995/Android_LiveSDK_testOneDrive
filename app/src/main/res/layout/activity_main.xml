@@ -38,8 +38,14 @@
         android:layout_height="wrap_content" />
 
     <Button
-        android:id="@+id/meow_and_meow"
-        android:text="noAsync"
+    android:id="@+id/meow_and_meow"
+    android:text="noAsync"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/exploreMeowFolder"
+        android:text="MeowFolder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
