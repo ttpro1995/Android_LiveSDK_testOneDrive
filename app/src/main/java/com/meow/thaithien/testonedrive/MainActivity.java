@@ -88,7 +88,7 @@ public class MainActivity extends ActionBarActivity {
         meow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                GetAllItem();//TODO test it
+                new UploadMeowFolder().execute();
             }
         });
 
@@ -101,7 +101,7 @@ public class MainActivity extends ActionBarActivity {
         createFolder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                createFolder();
+                //createFolderWithAsync();
             }
         });
 
@@ -124,7 +124,7 @@ public class MainActivity extends ActionBarActivity {
 
     private void SignIn() {
         auth = new LiveAuthClient(MainActivity.this, MyConstants.Live_ID);
-        Iterable<String> scopes = Arrays.asList("wl.signin", "wl.basic", "wl.skydrive");
+        Iterable<String> scopes = Arrays.asList("wl.signin", "wl.basic", "wl.skydrive","wl.skydrive_update");
         auth.login(MainActivity.this, scopes, new LiveAuthListener() {
             @Override
             public void onAuthComplete(LiveStatus liveStatus, LiveConnectSession liveConnectSession, Object o) {
@@ -250,7 +250,7 @@ public class MainActivity extends ActionBarActivity {
         });
     }
 
-    public void createFolder() {
+    public void createFolderWithAsync() {
         final LiveOperationListener opListener = new LiveOperationListener() {
             public void onError(LiveOperationException exception, LiveOperation operation) {
                 resultTextView.setText("Error creating folder: " + exception.getMessage());
@@ -393,7 +393,6 @@ public class MainActivity extends ActionBarActivity {
             OneDriveItem mewo = OneDriveItem.FindFolder("MeowFolder", root);
             String meow_id = mewo.getId();
             ArrayList<OneDriveItem> result = getFolderFiles(meow_id);
-
             return result;
         }
 
@@ -404,6 +403,62 @@ public class MainActivity extends ActionBarActivity {
                 Log.i("root", oneDriveItems.get(i).getType() + " " + oneDriveItems.get(i).getName() + " " + oneDriveItems.get(i).getId());
             }
             }
+    }
+
+    //TODO Onedrive Uploader
+    //Parent folder Subfolder
+    private class UploadMeowFolder extends AsyncTask<Void,Void,Void>{
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                ArrayList<OneDriveItem> root = getRootFiles();
+                OneDriveItem Parent_folder = OneDriveItem.FindFolder("MeowParentFolder", root);
+                String Parent_folder_id = null;
+                if (Parent_folder == null)
+                {
+                    Parent_folder_id = CreateFolderNoAsync("me/skydrive/","MeowParentFolder");
+                }else{
+                    Parent_folder_id = Parent_folder.getId();
+                }
+                //done create parent folder
+
+                //create child
+                ArrayList<OneDriveItem> ParentFolderFiles = getFolderFiles(Parent_folder_id);
+                OneDriveItem Child_folder = OneDriveItem.FindFolder("MeowKittenFolder", ParentFolderFiles);
+                String Child_folder_id= null;
+                if (Child_folder == null)
+                {
+                    Child_folder_id = CreateFolderNoAsync(Parent_folder_id,"MeowKittenFolder");
+                }else{
+                    Child_folder_id = Child_folder.getId();
+                }
+
+                CreateFile createFile = new CreateFile("meowMeowInSubFolder", "It is meow time", MainActivity.this);
+                File file = createFile.getFile();
+                LiveOperation uploadOperation = client.upload(Child_folder_id, file.getName(), new FileInputStream(file));
+
+              //  Log.i("UploadMeowFolder_result",uploadOperation.getResult().toString());
+            }
+            catch (Exception e){e.printStackTrace();}
+
+            return null;
+        }
+    }
+
+    //create folder no async
+    public String CreateFolderNoAsync(String path ,String name)
+    {
+        String result_id = null;
+        try {
+            JSONObject body = new JSONObject();
+            body.put("name", name);
+            body.put("description", "Keep Calm and Meow On");
+            LiveOperation liveOperation = client.post(path,body);
+            JSONObject result = liveOperation.getResult();
+            result_id = result.optString("id");
+        }
+        catch (Exception e){e.printStackTrace();}
+        return result_id;
     }
 
 }
