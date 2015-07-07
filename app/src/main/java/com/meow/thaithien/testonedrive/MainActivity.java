@@ -1,5 +1,6 @@
 package com.meow.thaithien.testonedrive;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -56,6 +57,7 @@ public class MainActivity extends ActionBarActivity {
     Button createFolder;
     Button noAsync;
     Button exploreMeowFolder;
+    Button GoTo;
 
     String ONEDRIVE_LOG_TAG = "Live SDK";
 
@@ -73,6 +75,14 @@ public class MainActivity extends ActionBarActivity {
         meow = (Button) findViewById(R.id.meow);
         noAsync = (Button) findViewById(R.id.meow_and_meow);
         exploreMeowFolder = (Button) findViewById(R.id.exploreMeowFolder);
+        GoTo = (Button) findViewById(R.id.GoToTest_bt);
+        GoTo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,TestOneDriveUploader.class);
+                startActivity(intent);
+            }
+        });
         exploreMeowFolder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -48,6 +48,11 @@
         android:text="MeowFolder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/GoToTest_bt"
+        android:text="GoToMeow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
 
 </LinearLayout>
