@@ -3,6 +3,9 @@ package com.meow.thaithien.testonedrive;
 import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 
 import com.microsoft.live.LiveAuthClient;
@@ -42,15 +45,26 @@ public class OneDriveUploader {
 
     private boolean LoginError = false;
 
+    //Handler
+    private Handler handler = null;
+
+    //flag
+    boolean sign_in_ok = false;
+
+    //LiveSDK_ID https://account.live.com/developers/applications/index
+    //look like this
+    //   0000000040159142
     public OneDriveUploader(String liveSDK_ID, Activity activity) {
         LiveSDK_ID = liveSDK_ID;
         this.activity = activity;
         this.context = this.activity.getBaseContext();
     }
 
+    //TODO:1 call SignIn()
+    //call it before upload
     public void SignIn() {
         LoginError = false;
-        auth = new LiveAuthClient(context, MyConstants.Live_ID);
+        auth = new LiveAuthClient(context, LiveSDK_ID);
         Iterable<String> scopes = Arrays.asList("wl.signin", "wl.basic", "wl.skydrive", "wl.skydrive_update");
         auth.login(activity, scopes, new LiveAuthListener() {
             @Override
@@ -60,6 +74,7 @@ public class OneDriveUploader {
                     client = new LiveConnectClient(liveConnectSession);
                     //resultTextView.setText("loged");
                     Log.i(ONEDRIVE_LOG_TAG,"Login");
+                    sign_in_ok = true;//flag login
                 }
             }
 
@@ -71,8 +86,18 @@ public class OneDriveUploader {
         });
     }
 
-    public void UploadOneDrive(String ParentFolder, String SubFolder, String FileName, InputStream is){
+    //TODO:2 check if it is signed in
+    //if it return true, it's ready to upload
+    public boolean isSignin(){
+        return  sign_in_ok;
+    }
 
+
+    //TODO:3 upload
+    //upload to parentfolder/subfolder/filename
+    public void UploadOneDrive(String ParentFolder, String SubFolder, String FileName, InputStream is, Handler mhandler){
+
+        this.handler = mhandler;
         this._ParentFolderName = ParentFolder;
         this._SubFolderName = SubFolder;
         this._FileName = FileName;
@@ -83,6 +108,7 @@ public class OneDriveUploader {
 
     private class UploadOneDriveAsynTask extends AsyncTask<Void,Void,Void>{
 
+
         String ParentFolderName = null;
         String SubFolderName = null;
         String FileName = null;
@@ -91,27 +117,17 @@ public class OneDriveUploader {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+
             ParentFolderName = _ParentFolderName;
             SubFolderName = _SubFolderName;
             FileName = _FileName;
             is = _is;
+
         }
 
         @Override
         protected Void doInBackground(Void... params) {
 
-            if (client == null)
-                SignIn();
-
-            //wait for login
-            while (client==null){
-                if (LoginError)
-                    return null;
-                else
-                try {
-                    Thread.sleep(100);
-                }catch (Exception e){e.printStackTrace();}
-            }
 
             //upload
             try {
@@ -148,10 +164,19 @@ public class OneDriveUploader {
 
                   Log.i("Upload_result",uploadOperation.getResult().toString());
             }
-            catch (Exception e){e.printStackTrace();}
+            catch (Exception e){
+                //failed
+                Onedrive_failed_handle();
+                e.printStackTrace();}
 
 
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            Onedrive_success_handle();
         }
     }
 
@@ -186,6 +211,7 @@ public class OneDriveUploader {
                 items.add(oneDriveItem);
             }
         } catch (Exception e) {
+
             e.printStackTrace();
         }
         return items;
@@ -210,6 +236,20 @@ public class OneDriveUploader {
             e.printStackTrace();
         }
         return items;
+    }
+
+    private void Onedrive_failed_handle(){
+        Message message = new Message();
+        message.arg1 = -1;//error
+        handler.sendMessage(message);
+        handler=null;
+    }
+
+    private void Onedrive_success_handle(){
+        Message message = new Message();
+        message.arg1 = 1;//success
+        handler.sendMessage(message);
+        handler=null;
     }
 
 }

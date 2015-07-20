@@ -1,5 +1,8 @@
 package com.meow.thaithien.testonedrive;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.provider.SyncStateContract;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -18,6 +21,7 @@ public class TestOneDriveUploader extends ActionBarActivity {
     Button login;
     Button upload;
     OneDriveUploader oneDriveUploader = null;
+    Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +38,13 @@ public class TestOneDriveUploader extends ActionBarActivity {
             }
         });
 
+        handler = new Handler(){
+
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+            }
+        };
         upload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -44,7 +55,7 @@ public class TestOneDriveUploader extends ActionBarActivity {
                     is = new FileInputStream(file);
                 }catch (Exception e){e.printStackTrace();}
 
-                oneDriveUploader.UploadOneDrive("TestOneDriveParent","TestOneDriveSub",file.getName(),is);
+                oneDriveUploader.UploadOneDrive("TestOneDriveParent","TestOneDriveSub",file.getName(),is,handler);
 
             }
         });
