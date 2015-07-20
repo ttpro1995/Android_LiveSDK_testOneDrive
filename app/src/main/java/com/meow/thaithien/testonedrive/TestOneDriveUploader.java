@@ -22,6 +22,7 @@ public class TestOneDriveUploader extends ActionBarActivity {
     Button upload;
     OneDriveUploader oneDriveUploader = null;
     Handler handler;
+    Button LoginAndUpload;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +60,22 @@ public class TestOneDriveUploader extends ActionBarActivity {
 
             }
         });
+
+        Button LoginAndUpload = (Button) findViewById(R.id.login_upload_bt);
+        LoginAndUpload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CreateFile createFile = new CreateFile("LoginUploadTest1","Test One Drive Uploader",TestOneDriveUploader.this);
+                File file = createFile.getFile();
+                InputStream is = null;
+                try {
+                    is = new FileInputStream(file);
+                }catch (Exception e){e.printStackTrace();}
+                oneDriveUploader.LoginAndUpload("LoginUpload","LoginUpload",file.getName(),is,handler);
+
+            }
+        });
+
     }
 
     @Override

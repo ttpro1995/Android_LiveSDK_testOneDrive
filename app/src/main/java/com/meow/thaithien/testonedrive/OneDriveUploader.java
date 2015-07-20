@@ -106,6 +106,38 @@ public class OneDriveUploader {
 
     }
 
+
+    public   void LoginAndUpload( final String  ParentFolder,final String SubFolder,final String FileName,final InputStream is,final Handler mhandler){
+        LoginError = false;
+        if (sign_in_ok == false) {
+            auth = new LiveAuthClient(context, LiveSDK_ID);
+            Iterable<String> scopes = Arrays.asList("wl.signin", "wl.basic", "wl.skydrive", "wl.skydrive_update");
+            auth.login(activity, scopes, new LiveAuthListener() {
+                @Override
+                public void onAuthComplete(LiveStatus liveStatus, LiveConnectSession liveConnectSession, Object o) {
+                    if (liveStatus == LiveStatus.CONNECTED) {
+                        Log.i(ONEDRIVE_LOG_TAG, "complete");
+                        client = new LiveConnectClient(liveConnectSession);
+                        //resultTextView.setText("loged");
+                        Log.i(ONEDRIVE_LOG_TAG, "Login");
+                        sign_in_ok = true;//flag login
+
+                        //upload
+                        UploadOneDrive(ParentFolder, SubFolder, FileName, is, mhandler);
+                        //
+                    }
+                }
+
+                @Override
+                public void onAuthError(LiveAuthException e, Object o) {
+                    e.printStackTrace();
+                    LoginError = true;
+                }
+            });
+        }
+        else UploadOneDrive(ParentFolder, SubFolder, FileName, is, mhandler);
+    }
+
     private class UploadOneDriveAsynTask extends AsyncTask<Void,Void,Void>{
 
 
