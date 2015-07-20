@@ -107,7 +107,7 @@ public class OneDriveUploader {
     }
 
 
-    public   void LoginAndUpload( final String  ParentFolder,final String SubFolder,final String FileName,final InputStream is,final Handler mhandler){
+    public  void LoginAndUpload( final String  ParentFolder,final String SubFolder,final String FileName,final InputStream is,final Handler mhandler){
         LoginError = false;
         if (sign_in_ok == false) {
             auth = new LiveAuthClient(context, LiveSDK_ID);
